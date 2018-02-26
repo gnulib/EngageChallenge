@@ -9,6 +9,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private Button btnMeasure;
     private EditText name, deviceId;
@@ -27,22 +30,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        Log.d(TAG, "parsing scan result...");
+        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+        String device = deviceId.getText().toString();
+        if (scanResult != null) {
+            // handle scan result
+            device = scanResult.getContents();
+            Log.d(TAG, "got valid scan result: '" + device + "'");
+        } else {
+            Log.d(TAG, "did not get valid scan result");
+        }
+        Intent newIntent = new Intent(this, Measurement.class);
+        newIntent.putExtra("name", name.getText().toString());
+        newIntent.putExtra("deviceId", device);
+        startActivity(newIntent);
+    }
+    @Override
     public void onClick(View v) {
         if (v == btnMeasure)
         {
-            if (name.getText() != null && name.getText().length() != 0 && deviceId.getText() != null && deviceId.getText().length() != 0)
+            if (name.getText() != null && name.getText().length() != 0)
             {
-                Log.v(TAG, "got name: " + name.getText() + ", and device ID: " + deviceId.getText());
-                Log.d(TAG, "initiating Measurement activity...");
+                Log.v(TAG, "got name: " + name.getText());
+                Log.d(TAG, "requesting scan intent...");
                 errorMsg.setVisibility(View.GONE);
-                Intent intent = new Intent(this, Measurement.class);
-                intent.putExtra("name", name.getText().toString());
-                intent.putExtra("deviceId", deviceId.getText().toString());
-                startActivity(intent);
+                IntentIntegrator integrator = new IntentIntegrator(this);
+                integrator.initiateScan();
             }
             else
             {
-                errorMsg.setText("Please complete both fields");
+                errorMsg.setText("Please provide name!!!");
                 errorMsg.setVisibility(View.VISIBLE);
             }
         }

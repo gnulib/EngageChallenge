@@ -21,7 +21,7 @@ public class Measurement extends AppCompatActivity {
     private String name;
     private String deviceId;
     private String url;
-    private class ReadMeasurements extends AsyncTask<Void, Integer, Integer> {
+    private class ReadMeasurements extends AsyncTask<Void, Integer, Reading> {
         private String name;
         private String deviceId;
         private RestTemplate restTemplate;
@@ -47,15 +47,15 @@ public class Measurement extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute (Integer reading) {
+        protected void onPostExecute (Reading reading) {
             measuringMsg.setVisibility(View.GONE);
             measuring.setVisibility(View.GONE);
-            measurement.setText("Weight: " + reading + " Lbs!");
+            measurement.setText("Weight: " + reading.getMeasurement() + " Lbs!");
             measurement.setVisibility(View.VISIBLE);
 
         }
         @Override
-        protected Integer doInBackground(Void... params) {
+        protected Reading doInBackground(Void... params) {
             // simulate reading by waiting for 5 seconds
             Log.d(TAG, "starting simulation to fetch weight");
             try {
@@ -63,6 +63,7 @@ public class Measurement extends AppCompatActivity {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            // we'll make 10 readings
             int max = 10;
             readings = new Reading[max];
             measuring.setMax(max);
@@ -79,7 +80,7 @@ public class Measurement extends AppCompatActivity {
                 }
             }
             Log.d(TAG, "end simulation to fetch measurement");
-            return 160;
+            return readings[max-1];
         }
     }
 
@@ -87,8 +88,8 @@ public class Measurement extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_measurement);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
         Log.d(TAG, "activity initializing...");
         url = getString(R.string.measurement_url);
         name = getIntent().getStringExtra("name");
