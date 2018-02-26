@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText name, deviceId;
     private TextView errorMsg;
     private static final String TAG = "MainActivity";
+    private boolean isTest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +28,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.name = (EditText) findViewById(R.id.name);
         this.deviceId = (EditText) findViewById(R.id.device_id);
         this.errorMsg = (TextView) findViewById(R.id.error_msg);
+        this.isTest = getString(R.string.mode).equals("Test");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "activity resumed...");
+        if (isTest) {
+            deviceId.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -50,17 +61,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (v == btnMeasure)
         {
-            if (name.getText() != null && name.getText().length() != 0)
+            if (name.getText() != null && name.getText().length() != 0 && (!this.isTest || deviceId.getText().length() != 0))
             {
                 Log.v(TAG, "got name: " + name.getText());
-                Log.d(TAG, "requesting scan intent...");
-                errorMsg.setVisibility(View.GONE);
-                IntentIntegrator integrator = new IntentIntegrator(this);
-                integrator.initiateScan();
+                if (!isTest) {
+                    Log.d(TAG, "requesting scan intent...");
+                    errorMsg.setVisibility(View.GONE);
+                    IntentIntegrator integrator = new IntentIntegrator(this);
+                    integrator.initiateScan();
+                } else {
+                    Log.d(TAG, "Calling measurement directly");
+                    Intent newIntent = new Intent(this, Measurement.class);
+                    newIntent.putExtra("name", name.getText().toString());
+                    newIntent.putExtra("deviceId", deviceId.getText().toString());
+                    startActivity(newIntent);
+                }
             }
             else
             {
-                errorMsg.setText("Please provide name!!!");
+                errorMsg.setText("Please provide required parameters!!!");
                 errorMsg.setVisibility(View.VISIBLE);
             }
         }

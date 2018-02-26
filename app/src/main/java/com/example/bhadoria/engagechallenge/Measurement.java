@@ -12,6 +12,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -55,7 +56,11 @@ public class Measurement extends AppCompatActivity {
         protected void onPostExecute (ReadingResp readingResp) {
             measuringMsg.setVisibility(View.GONE);
             measuring.setVisibility(View.GONE);
-            measurement.setText("Weight: " + readingResp.getWeight() + " Lbs!");
+            if (readingResp != null) {
+                measurement.setText("Weight: " + readingResp.getWeight() + " Lbs!");
+            } else {
+                measurement.setText("No readings detected for device ID: " + deviceId);
+            }
             measurement.setVisibility(View.VISIBLE);
 
         }
@@ -89,6 +94,9 @@ public class Measurement extends AppCompatActivity {
                     e.printStackTrace();
                 } catch (RestClientException e) {
                     e.printStackTrace();
+                } catch (HttpMessageNotReadableException e) {
+                    Log.d(TAG, "device does not have weight entry");
+                    readingResps[i] = null;
                 }
             }
             Log.d(TAG, "end simulation to fetch measurement");

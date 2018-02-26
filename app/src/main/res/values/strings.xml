@@ -4,6 +4,7 @@
     <string name="measurement_url">https://engage-challenge.appspot.com/devices</string>
     <string name="title_activity_scan">Scan</string>
     <string name="device_id">1234321</string>
+    <string name="mode">Prod</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>
