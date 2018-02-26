@@ -3,15 +3,20 @@ package com.example.bhadoria.engagechallenge;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
 
 public class Measurement extends AppCompatActivity {
     private ProgressBar measuring;
@@ -21,11 +26,11 @@ public class Measurement extends AppCompatActivity {
     private String name;
     private String deviceId;
     private String url;
-    private class ReadMeasurements extends AsyncTask<Void, Integer, Reading> {
+    private class ReadMeasurements extends AsyncTask<Void, Integer, ReadingResp> {
         private String name;
         private String deviceId;
         private RestTemplate restTemplate;
-        private Reading[] readings;
+        private ReadingResp[] readingResps;
         public ReadMeasurements(String name, String deviceId) {
             this.name = name;
             this.deviceId = deviceId;
@@ -35,27 +40,27 @@ public class Measurement extends AppCompatActivity {
         }
         @Override
         protected void onPreExecute() {
-            measuringMsg.setText("Reading measurements...");
+            measuringMsg.setText("ReadingResp measurements...");
             measuringMsg.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected void onProgressUpdate (Integer... values) {
-            measuringMsg.setText(readings[values[0]-1].getMeasurement());
+            measuringMsg.setText(readingResps[values[0]-1].getWeight().toString());
             measuring.setProgress(values[0]);
 
         }
 
         @Override
-        protected void onPostExecute (Reading reading) {
+        protected void onPostExecute (ReadingResp readingResp) {
             measuringMsg.setVisibility(View.GONE);
             measuring.setVisibility(View.GONE);
-            measurement.setText("Weight: " + reading.getMeasurement() + " Lbs!");
+            measurement.setText("Weight: " + readingResp.getWeight() + " Lbs!");
             measurement.setVisibility(View.VISIBLE);
 
         }
         @Override
-        protected Reading doInBackground(Void... params) {
+        protected ReadingResp doInBackground(Void... params) {
             // simulate reading by waiting for 5 seconds
             Log.d(TAG, "starting simulation to fetch weight");
             try {
@@ -63,14 +68,21 @@ public class Measurement extends AppCompatActivity {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // we'll make 10 readings
+            // we'll make 10 readingResps
             int max = 10;
-            readings = new Reading[max];
+            readingResps = new ReadingResp[max];
             measuring.setMax(max);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+            ReadingReq req = new ReadingReq();
+            req.setDeviceId(deviceId);
+            req.setUsername(name);
+            HttpEntity<ReadingReq> entity = new HttpEntity<ReadingReq>(req, headers);
             for (int i = 0; i < max; i++) {
                 Log.d(TAG, "" + (i + 1));
                 try {
-                    readings[i] = restTemplate.getForObject(url, Reading.class);
+
+                    readingResps[i] = restTemplate.exchange(url, HttpMethod.PUT, entity, ReadingResp.class).getBody();
                     publishProgress(new Integer[]{i+1});
                     Thread.sleep((5 * 1000 / max));
                 } catch (InterruptedException e) {
@@ -80,7 +92,7 @@ public class Measurement extends AppCompatActivity {
                 }
             }
             Log.d(TAG, "end simulation to fetch measurement");
-            return readings[max-1];
+            return readingResps[max-1];
         }
     }
 

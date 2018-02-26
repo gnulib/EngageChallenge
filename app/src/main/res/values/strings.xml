@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Engage Challenge</string>
     <string name="title_activity_measurement">Measurement</string>
-    <string name="measurement_url">http://192.168.1.114:8080/v1/public/reading</string>
-
+    <string name="measurement_url">https://engage-challenge.appspot.com/devices</string>
     <string name="title_activity_scan">Scan</string>
+    <string name="device_id">1234321</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 </resources>

@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         Log.d(TAG, "parsing scan result...");
         IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
-        String device = deviceId.getText().toString();
+        String device = getString(R.string.device_id);
         if (scanResult != null) {
             // handle scan result
             device = scanResult.getContents();
