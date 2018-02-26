@@ -2,14 +2,16 @@ package com.example.bhadoria.engagechallenge;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 public class Measurement extends AppCompatActivity {
     private ProgressBar measuring;
@@ -18,12 +20,18 @@ public class Measurement extends AppCompatActivity {
     private static final String TAG = "MeasurementActivity";
     private String name;
     private String deviceId;
+    private String url;
     private class ReadMeasurements extends AsyncTask<Void, Integer, Integer> {
         private String name;
         private String deviceId;
+        private RestTemplate restTemplate;
+        private Reading[] readings;
         public ReadMeasurements(String name, String deviceId) {
             this.name = name;
             this.deviceId = deviceId;
+            restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+
         }
         @Override
         protected void onPreExecute() {
@@ -33,6 +41,7 @@ public class Measurement extends AppCompatActivity {
 
         @Override
         protected void onProgressUpdate (Integer... values) {
+            measuringMsg.setText(readings[values[0]-1].getMeasurement());
             measuring.setProgress(values[0]);
 
         }
@@ -49,14 +58,23 @@ public class Measurement extends AppCompatActivity {
         protected Integer doInBackground(Void... params) {
             // simulate reading by waiting for 5 seconds
             Log.d(TAG, "starting simulation to fetch weight");
-            int max = 100;
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            int max = 10;
+            readings = new Reading[max];
             measuring.setMax(max);
             for (int i = 0; i < max; i++) {
                 Log.d(TAG, "" + (i + 1));
                 try {
+                    readings[i] = restTemplate.getForObject(url, Reading.class);
                     publishProgress(new Integer[]{i+1});
                     Thread.sleep((5 * 1000 / max));
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (RestClientException e) {
                     e.printStackTrace();
                 }
             }
@@ -72,6 +90,7 @@ public class Measurement extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Log.d(TAG, "activity initializing...");
+        url = getString(R.string.measurement_url);
         name = getIntent().getStringExtra("name");
         deviceId = getIntent().getStringExtra("deviceId");
         Log.v(TAG, "got name: " + name + ", and device ID: " + deviceId);
